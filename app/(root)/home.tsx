@@ -14,13 +14,16 @@ import { setPost } from "@/constants/date-setter";
 import { feedApiManager } from "./FeedApiManager";
 import { useFocusEffect } from "expo-router";
 import { ScrollView } from "react-native-gesture-handler";
+import { useGlobalContext } from "@/context/GlobalProvider";
 
 const Home = () => {
   const [posts, setPosts] = useState<any>([]);
   const [loading, setLoading] = useState(true);
 
+  const { feedId } = useGlobalContext();
+
   const fetchPosts = async () => {
-    const data = await feedApiManager.getPosts();
+    const data = await feedApiManager.getPosts(feedId);
 
     setPosts(data);
 

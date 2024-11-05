@@ -23,3 +23,10 @@ export interface signUpProps {
   occupation: string;
   imagesUri: string[];
 }
+
+export interface TribeJoined {
+  tribe_joined_id: number;
+  tribe_name: string;
+  created_at: string;
+  total_count: number;
+}

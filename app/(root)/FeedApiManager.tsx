@@ -52,6 +52,7 @@ class FeedApiManager {
 
   async uploadFilesAndCreatePost(
     userId: string,
+    tribeId: number, // Added tribeId parameter
     files: string[],
     caption: string,
     created_at: string
@@ -114,10 +115,12 @@ class FeedApiManager {
       }
 
       if (uploadedFiles.length > 0) {
+        // Insert the post with tribeId
         const { data, error: insertError } = await supabase
           .from("posts")
           .insert({
             user_id: userId,
+            tribe_id: tribeId, // Insert tribe_id here
             content_path: uploadedFiles,
             caption: caption,
             created_at: created_at,
@@ -156,7 +159,51 @@ class FeedApiManager {
     }
   }
 
-  async getPosts(limit: number = 10, offset: number = 0): Promise<Post[]> {
+  async getFeeds(userId: string) {
+    try {
+      // Fetch the user to get their joined tribes
+      const { data: user, error: userError } = await supabase
+        .from("user_details")
+        .select("user_tribe_joined")
+        .eq("user_id", userId)
+        .single();
+
+      if (userError) throw userError;
+
+      // Ensure the user has joined tribes
+      if (
+        !user ||
+        !user.user_tribe_joined ||
+        user.user_tribe_joined.length === 0
+      ) {
+        return []; // Return an empty array if the user has no joined tribes
+      }
+
+      // Fetch details of each tribe from the tribe_joined table
+      const { data: tribes, error: tribesError } = await supabase
+        .from("tribe_joined")
+        .select("tribe_joined_id, tribe_name, total_count")
+        .in("tribe_joined_id", user.user_tribe_joined);
+
+      if (tribesError) throw tribesError;
+
+      // Return the tribe details
+      return tribes.map((tribe) => ({
+        id: tribe.tribe_joined_id,
+        name: tribe.tribe_name,
+        userCount: tribe.total_count,
+      }));
+    } catch (error) {
+      console.error("Error in getFeeds function:", error);
+      throw error;
+    }
+  }
+
+  async getPosts(
+    tribeId: number,
+    limit: number = 10,
+    offset: number = 0
+  ): Promise<Post[]> {
     try {
       const { data, error } = await supabase
         .from("posts")
@@ -169,7 +216,8 @@ class FeedApiManager {
           created_at,
           user_details(username, profile_pictures)
         `
-        ) // Fetch profile_pictures without array indexing
+        )
+        .eq("tribe_id", tribeId) // Filter by tribeId
         .order("created_at", { ascending: false })
         .range(offset, offset + limit - 1);
 
@@ -370,6 +418,7 @@ class FeedApiManager {
 
   async uploadStoryAndCreateEntry(
     userId: string,
+    tribeId: number, // Added tribeId parameter
     file: any,
     created_at: string
   ): Promise<{ story: Story | null; failed: boolean; error?: string }> {
@@ -442,6 +491,7 @@ class FeedApiManager {
         .from("stories")
         .insert({
           user_id: userId,
+          tribe_id: tribeId, // Insert tribe_id here
           content_path: [publicUrl], // Store the public URL instead of the file path
           created_at: created_at,
         })
@@ -468,6 +518,7 @@ class FeedApiManager {
   //get stories function
   //you can use the content_path for the image url of image story
   async getTodayStories(
+    tribeId: number, // Added tribeId parameter
     limit: number = 10,
     offset: number = 0
   ): Promise<Story[]> {
@@ -492,6 +543,7 @@ class FeedApiManager {
           user_details(username, profile_pictures)
         `
         )
+        .eq("tribe_id", tribeId) // Filter by tribeId
         .gte("created_at", today.toISOString())
         .lt("created_at", tomorrow.toISOString())
         .order("created_at", { ascending: false })
@@ -678,6 +730,26 @@ class FeedApiManager {
   async getTribes() {
     const res = setTribes();
     return res;
+  }
+
+  async getTribeName(tribeId: string): Promise<string | null> {
+    try {
+      const { data, error } = await supabase
+        .from("tribe_joined")
+        .select("tribe_name")
+        .eq("tribe_joined_id", tribeId)
+        .single();
+
+      if (error) {
+        console.error("Error fetching tribe name:", error);
+        return null;
+      }
+
+      return data?.tribe_name || null;
+    } catch (error) {
+      console.error("Error in getTribeName function:", error);
+      return null;
+    }
   }
 }
 

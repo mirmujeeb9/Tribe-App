@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -6,15 +6,31 @@ import {
   ImageBackground,
   TouchableOpacity,
 } from "react-native";
-
-import { setCommunities } from "@/constants/date-setter";
 import { router } from "expo-router";
-
-const communityData = setCommunities();
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { feedApiManager } from "@/app/(root)/FeedApiManager";
+import { community as communityImg } from "../constants/images";
+import { useGlobalContext } from "@/context/GlobalProvider";
 
 const Communities = () => {
+  const [communityData, setCommunityData] = useState<any[]>([]); // Set initial state to an empty array
+  const { feedId, setFeedId } = useGlobalContext();
+
+  useEffect(() => {
+    const fetchCommunities = async () => {
+      const userId = await AsyncStorage.getItem("userId");
+      if (!userId) return;
+      const data = await feedApiManager.getFeeds(userId);
+      setCommunityData(data || []); // Set data or empty array if data is null/undefined
+    };
+
+    fetchCommunities();
+  }, []);
+
   const handleCommunityPress = (community: any) => {
     console.log(`Navigating to community: ${community.name}`);
+    setFeedId(community.id);
+    console.log(feedId);
     router.push("/home");
   };
 
@@ -27,17 +43,14 @@ const Communities = () => {
           onPress={() => handleCommunityPress(community)}
         >
           <ImageBackground
-            source={community.imageUrl}
+            source={communityImg}
             style={styles.imageBackground}
             imageStyle={styles.imageStyle}
           >
             <Text style={styles.communityName}>{community.name}</Text>
             <View>
               <Text style={styles.communityDetails}>
-                Members: {community.members}
-              </Text>
-              <Text style={styles.communityDetails}>
-                Posts: {community.posts}
+                Members: {community.userCount}
               </Text>
             </View>
           </ImageBackground>

@@ -11,6 +11,22 @@ export const signup = async (data: signUpProps) => {
   try {
     const currentTimestamp = new Date().toISOString(); // Get the current timestamp in ISO format
 
+    // List of tribes to be added/updated
+    const tribes = [
+      data.neighborhood,
+      data.secondarySchool,
+      data.university,
+      data.occupation,
+      data.religion,
+      data.politicalParty,
+      data.sportsClub,
+      data.ethnicTribe,
+      data.fullName,
+    ];
+
+    const tribeIds = []; // Store tribe IDs to be added to user_joined_tribe array
+
+    // Insert user details first
     const { data: newUser, error } = await supabase
       .from("user_details")
       .insert([
@@ -43,8 +59,8 @@ export const signup = async (data: signUpProps) => {
           occupation: data.occupation,
         },
       ])
-      .select() // This will return the inserted row, including the auto-incremented user_id
-      .single(); // We expect a single row to be returned
+      .select()
+      .single();
 
     if (error) throw error;
 
@@ -52,7 +68,60 @@ export const signup = async (data: signUpProps) => {
       throw new Error("User creation failed or user ID is missing.");
     }
 
-    // console.log('User signed up successfully:', newUser);
+    // Loop through each tribe, check if it exists, and either update or insert
+    for (const tribe of tribes) {
+      if (!tribe) continue; // Skip empty values
+
+      // Check if tribe already exists
+      const { data: existingTribe, error: tribeError } = await supabase
+        .from("tribe_joined")
+        .select("*")
+        .eq("tribe_name", tribe)
+        .maybeSingle();
+
+      if (tribeError && tribeError.code !== "PGRST104") throw tribeError;
+
+      if (existingTribe) {
+        // Tribe exists, increment the user count
+        const { data: updatedTribe, error: updateError } = await supabase
+          .from("tribe_joined")
+          .update({ total_count: existingTribe.total_count + 1 })
+          .eq("tribe_joined_id", existingTribe.tribe_joined_id)
+          .select()
+          .single();
+
+        if (updateError) throw updateError;
+
+        tribeIds.push(updatedTribe.tribe_joined_id);
+      } else {
+        // Tribe does not exist, insert it with a user count of 1
+        const { data: newTribe, error: insertError } = await supabase
+          .from("tribe_joined")
+          .insert([
+            {
+              created_at: currentTimestamp,
+              tribe_name: tribe,
+              total_count: 1,
+            },
+          ])
+          .select()
+          .single();
+
+        if (insertError) throw insertError;
+
+        tribeIds.push(newTribe.tribe_joined_id);
+      }
+    }
+
+    // Update user with the joined tribes
+    const { error: userUpdateError } = await supabase
+      .from("user_details")
+      .update({ user_tribe_joined: tribeIds })
+      .eq("user_id", newUser.user_id);
+
+    if (userUpdateError) throw userUpdateError;
+
+    console.log("User signed up successfully with tribes:", newUser);
     return newUser;
   } catch (error) {
     console.error("Error in signup function:", error);

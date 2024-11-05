@@ -14,11 +14,13 @@ import GradientView from "@/components/GradientView";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { feedApiManager } from "./FeedApiManager"; // Update this path
+import { useGlobalContext } from "@/context/GlobalProvider";
 
 const AddPost = () => {
   const [caption, setCaption] = useState("");
   const [media, setMedia] = useState<any>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const { feedId } = useGlobalContext();
 
   const pickMedia = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -66,6 +68,7 @@ const AddPost = () => {
 
       const result = await feedApiManager.uploadFilesAndCreatePost(
         userId,
+        feedId,
         fileUris,
         caption,
         created_at

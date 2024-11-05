@@ -11,6 +11,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { setStories } from "@/constants/date-setter";
 import { router, useFocusEffect } from "expo-router";
 import { feedApiManager, Story } from "@/app/(root)/FeedApiManager";
+import { useGlobalContext } from "@/context/GlobalProvider";
 
 interface StoryComponentProps {
   isAddNew?: boolean;
@@ -25,6 +26,7 @@ interface StoryComponentProps {
 }
 
 const StoryComponent = () => {
+  const { feedId } = useGlobalContext();
   const [stories, setStories] = useState<StoryComponentProps[]>([
     {
       story_id: "0",
@@ -34,7 +36,7 @@ const StoryComponent = () => {
   const [loading, setLoading] = useState(true);
 
   const getStories = async () => {
-    const data = await feedApiManager.getTodayStories();
+    const data = await feedApiManager.getTodayStories(feedId);
     setStories([
       {
         story_id: "0",

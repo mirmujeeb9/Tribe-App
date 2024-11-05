@@ -33,6 +33,8 @@ const GlobalProvider = ({ children }: any) => {
 
   const [countryData, setCountryData] = useState<any>(null);
 
+  const [feedId, setFeedId] = useState<number>(0);
+
   return (
     <GlobalContext.Provider
       value={{
@@ -40,6 +42,8 @@ const GlobalProvider = ({ children }: any) => {
         setSignUpData,
         countryData,
         setCountryData,
+        setFeedId,
+        feedId,
       }}
     >
       {children}

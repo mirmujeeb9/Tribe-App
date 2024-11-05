@@ -17,6 +17,7 @@ import {
 import { router, useFocusEffect } from "expo-router";
 import { AntDesign, Ionicons } from "@expo/vector-icons";
 import { feedApiManager } from "./FeedApiManager";
+import { useGlobalContext } from "@/context/GlobalProvider";
 
 interface StoryComponentProps {
   story_id: string;
@@ -32,6 +33,8 @@ interface StoryComponentProps {
 const { width, height } = Dimensions.get("window");
 
 const StoryScreen = () => {
+  const { feedId } = useGlobalContext();
+
   const onClose = () => {
     router.push("/home");
   };
@@ -61,7 +64,7 @@ const StoryScreen = () => {
   const onSwipeRight = () => handlePrevious();
 
   const getStories = async () => {
-    const data = await feedApiManager.getTodayStories();
+    const data = await feedApiManager.getTodayStories(feedId);
     setStories(data);
     setLoading(false);
   };
