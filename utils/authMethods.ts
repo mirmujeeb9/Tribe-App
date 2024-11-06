@@ -11,17 +11,53 @@ export const signup = async (data: signUpProps) => {
   try {
     const currentTimestamp = new Date().toISOString(); // Get the current timestamp in ISO format
 
-    // List of tribes to be added/updated
+    // List of tribes with names and image URLs
     const tribes = [
-      data.neighborhood,
-      data.secondarySchool,
-      data.university,
-      data.occupation,
-      data.religion,
-      data.politicalParty,
-      data.sportsClub,
-      data.ethnicTribe,
-      data.fullName,
+      {
+        name: data.neighborhood,
+        img_url:
+          "https://dpwunczfjmbamacifsot.supabase.co/storage/v1/object/public/images_user_signup/neighborhood.jpg",
+      },
+      {
+        name: data.secondarySchool,
+        img_url:
+          "https://dpwunczfjmbamacifsot.supabase.co/storage/v1/object/public/images_user_signup/school.jpg",
+      },
+      {
+        name: data.university,
+        img_url:
+          "https://dpwunczfjmbamacifsot.supabase.co/storage/v1/object/public/images_user_signup/uni.png",
+      },
+      {
+        name: data.occupation,
+        img_url:
+          "https://dpwunczfjmbamacifsot.supabase.co/storage/v1/object/public/images_user_signup/occ.jpg",
+      },
+      {
+        name: data.religion,
+        img_url:
+          "https://dpwunczfjmbamacifsot.supabase.co/storage/v1/object/public/images_user_signup/religions.jpg",
+      },
+      {
+        name: data.politicalParty,
+        img_url:
+          "https://dpwunczfjmbamacifsot.supabase.co/storage/v1/object/public/images_user_signup/pol.jpg",
+      },
+      {
+        name: data.sportsClub,
+        img_url:
+          "https://dpwunczfjmbamacifsot.supabase.co/storage/v1/object/public/images_user_signup/sports.jpg",
+      },
+      {
+        name: data.ethnicTribe,
+        img_url:
+          "https://dpwunczfjmbamacifsot.supabase.co/storage/v1/object/public/images_user_signup/ethnic.jpg",
+      },
+      {
+        name: data.fullName,
+        img_url:
+          "https://dpwunczfjmbamacifsot.supabase.co/storage/v1/object/public/images_user_signup/profile.png",
+      },
     ];
 
     const tribeIds = []; // Store tribe IDs to be added to user_joined_tribe array
@@ -70,13 +106,13 @@ export const signup = async (data: signUpProps) => {
 
     // Loop through each tribe, check if it exists, and either update or insert
     for (const tribe of tribes) {
-      if (!tribe) continue; // Skip empty values
+      if (!tribe.name) continue; // Skip empty values
 
       // Check if tribe already exists
       const { data: existingTribe, error: tribeError } = await supabase
         .from("tribe_joined")
         .select("*")
-        .eq("tribe_name", tribe)
+        .eq("tribe_name", tribe.name)
         .maybeSingle();
 
       if (tribeError && tribeError.code !== "PGRST104") throw tribeError;
@@ -94,13 +130,14 @@ export const signup = async (data: signUpProps) => {
 
         tribeIds.push(updatedTribe.tribe_joined_id);
       } else {
-        // Tribe does not exist, insert it with a user count of 1
+        // Tribe does not exist, insert it with a user count of 1 and img_url
         const { data: newTribe, error: insertError } = await supabase
           .from("tribe_joined")
           .insert([
             {
               created_at: currentTimestamp,
-              tribe_name: tribe,
+              tribe_name: tribe.name,
+              img_url: tribe.img_url, // Add img_url here
               total_count: 1,
             },
           ])

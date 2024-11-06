@@ -14,7 +14,7 @@ import { useGlobalContext } from "@/context/GlobalProvider";
 
 const Communities = () => {
   const [communityData, setCommunityData] = useState<any[]>([]); // Set initial state to an empty array
-  const { feedId, setFeedId } = useGlobalContext();
+  const { setFeedId, setFeedName } = useGlobalContext();
 
   useEffect(() => {
     const fetchCommunities = async () => {
@@ -27,10 +27,10 @@ const Communities = () => {
     fetchCommunities();
   }, []);
 
-  const handleCommunityPress = (community: any) => {
-    console.log(`Navigating to community: ${community.name}`);
+  const handleCommunityPress = async (community: any) => {
     setFeedId(community.id);
-    console.log(feedId);
+    const feedName = await feedApiManager.getTribeName(community.id);
+    setFeedName(feedName);
     router.push("/home");
   };
 
@@ -43,7 +43,7 @@ const Communities = () => {
           onPress={() => handleCommunityPress(community)}
         >
           <ImageBackground
-            source={communityImg}
+            source={{ uri: community.imgUrl }}
             style={styles.imageBackground}
             imageStyle={styles.imageStyle}
           >

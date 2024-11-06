@@ -1,10 +1,12 @@
 import { message, nav } from "@/constants/icons";
 import { splash1 } from "@/constants/images";
+import { useGlobalContext } from "@/context/GlobalProvider";
 import { router } from "expo-router";
 import React from "react";
 import { StyleSheet, Text, View, Image, TouchableOpacity } from "react-native";
 
 const TopNavbar = () => {
+  const { feedName } = useGlobalContext();
   return (
     <View
       style={{
@@ -53,7 +55,7 @@ const TopNavbar = () => {
             marginTop: 20,
           }}
         >
-          Yoruba
+          {feedName.length > 7 ? `${feedName.substring(0, 7)}...` : feedName}
         </Text>
       </View>
       <TouchableOpacity onPress={() => router.push("/chat")}>

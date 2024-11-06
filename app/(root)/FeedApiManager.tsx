@@ -182,7 +182,7 @@ class FeedApiManager {
       // Fetch details of each tribe from the tribe_joined table
       const { data: tribes, error: tribesError } = await supabase
         .from("tribe_joined")
-        .select("tribe_joined_id, tribe_name, total_count")
+        .select("tribe_joined_id, tribe_name, total_count, img_url")
         .in("tribe_joined_id", user.user_tribe_joined);
 
       if (tribesError) throw tribesError;
@@ -192,6 +192,7 @@ class FeedApiManager {
         id: tribe.tribe_joined_id,
         name: tribe.tribe_name,
         userCount: tribe.total_count,
+        imgUrl: tribe.img_url,
       }));
     } catch (error) {
       console.error("Error in getFeeds function:", error);
